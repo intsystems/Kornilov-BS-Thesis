@@ -1,0 +1,465 @@
+\documentclass{article}
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{algpseudocode}
+\usepackage{color}
+\usepackage{natbib}
+\usepackage{doi}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{hyperref}
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\newcommand{\divrus}{\mathop{\raisebox{-2pt}{\vdots}}}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcommand{\RR}{\mathcal{R}}
+\newcommand{\PP}{\mathcal{P}}
+\newcommand{\NPP}{\mathcal{NP}}
+\def \SS{\mathcal{S}_{++}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\WM}{\widetilde{\mathcal{M}}}
+\newcommand{\NLIP}{\overline{L} \in \mathcal{P}}
+\newcommand{\LIP}{L \in \mathcal{P}}
+\newcommand{\LNIP}{L \notin \mathcal{P}}
+\newcommand{\LINP}{L \in \mathcal{NP}}
+\newcommand{\LNINP}{L \notin \mathcal{NP}}
+\newcommand{\WIL}{w \in L}
+\newcommand{\WNIL}{w \notin L}
+\newcommand{\Time}{c \cdot p(|w|)}
+\usepackage{amsthm}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}
+\newtheorem*{assumption*}{\assumptionnumber}
+\providecommand{\assumptionnumber}{}
+\makeatletter
+\newenvironment{assumption}[2]
+ {%
+  \renewcommand{\assumptionnumber}{Assumption #1}%
+  \begin{assumption*}%
+  \protected@edef\@currentlabel{#1}%
+ }
+ {%
+  \end{assumption*}
+ }
+\makeatother
+\usepackage{amsthm}
+
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\newtheorem{corollary}{Corollary}[theorem]
+
+\def\ra{\rightarrow}
+\def\Ra{\Rightarrow}
+\def\ov{\overline}
+\def\CC{\mathbb{C}}
+\def\RR{\mathbb{R}}
+\def\EE{\mathbb{E}}
+\def\DD{\mathbb{D}}
+\def\NN{\mathbb{N}}
+\def\QQ{\mathbb{Q}}
+\def\ZZ{\mathbb{Z}}
+\def\eps{\varepsilon}
+%\usepackage[linesnumbered, ruled, vlined, noresetcount]{algorithm2e}
+\usepackage{epsfig}
+
+\renewcommand{\headeright}{Draft}
+\renewcommand{\undertitle}{Draft}
+
+\title{Gradient-Free Stochastic Optimization for Non-Smooth Convex  Infinite Variance problems under Adversarial Noise}
+
+\author{ Kornilov Nikita\\
+	Department of Control and Applied Mathematics\\
+	Moscow Institute of Physics and Technology\\
+	\texttt{kornilov.nm@phystech.edu} \\
+	%% \AND
+	%% Coauthor \\
+	%% Affiliation \\
+	%% Address \\
+	%% \texttt{email} \\
+	%% \And
+	%% Coauthor \\
+	%% Affiliation \\
+	%% Address \\
+	%% \texttt{email} \\
+	%% \And
+	%% Coauthor \\
+	%% Affiliation \\
+	%% Address \\
+	%% \texttt{email} \\
+}
+\date{}
+
+\renewcommand{\shorttitle}{GF infinite noise}
+
+%%% Add PDF metadata to help others organize their library
+%%% Once the PDF is generated, you can check the metadata with
+%%% $ pdfinfo template.pdf
+\hypersetup{
+pdftitle={A template for the arxiv style},
+pdfsubject={q-bio.NC, q-bio.QM},
+pdfauthor={Kornilov Nikita},
+pdfkeywords={GF Infinite noise},
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We expand results of work \cite{dvinskikh2022gradient} to infinite adversarial noise case with modified for such kind of noises Stochastic Mirror Descent from \cite{vural2022mirror}. 
+\end{abstract}
+
+
+\keywords{Gradient-Free, Infinite Variance, Adversarial Noise }
+
+\section{Introduction}
+Consider stochastic non-smooth convex minimization problem over compact convex set $\mathcal{S} \subset \RR^d$
+$$\min\limits_{\mathcal{S}} f(x) $$
+where $f(x) =  \EE_\xi [f(x, \xi)]$ and $f: \mathcal{S} \rightarrow \RR$ is convex and Lipschitz continuous function.
+
+Objective function cant be observed directly but instead we are given zeroth order oracle $\phi(x,\xi) = f(x, \xi) +\delta(x) $ with adversarial noise $\delta(x)$.
+
+\section{Gradient-Free setup}
+\subsection{Notations and assumptions}
+We use $\langle x,y \rangle = \sum_{k=1}^d x_ky_k$ to define inner product of $x,y \in \RR^d$. By norm $||\cdot||_p$ we mean $l_p$-norm. The dual norm of norm $||\cdot||_{p}$ is $|y||_{p^*} = \max_x \{\langle x, y \rangle | ||x||_p \leq 1\}$ 
+
+
+\begin{assumption}{1}{} \label{1A}
+Function $f(x, \xi)$ is convex and $M_2(\xi)$ Lipschitz continuous w.r.t. $l_2$ norm. For all $x_1, x_2 \in \mathcal{S}$
+$$|f(x_1, \xi) - f(x_2, \xi)| \leq M_2(\xi) ||x_1 - x_2||_2$$
+Moreover, $\exists \kappa \in (0,1] $  such that $\EE_\xi [M_2^{1+\kappa}(\xi)] \leq M_2^{1+\kappa}$
+\end{assumption}
+
+\begin{assumption}{2}{}\label{2A}
+For all $x \in \mathcal{S}: |\delta(x)| \leq \Delta < \infty$
+\end{assumption}
+\subsection{Randomized smoothing}
+We can use only zeroth order noised oracle
+$$\phi(x,\xi) = f(x, \xi) +\delta(x) $$
+In order to make approximation of objective function gradient we  sample vector $\mathbf{e}$ from uniform distribution on Euclidean sphere $\{\mathbf{e}: ||\mathbf{e}||_2 = 1\}$. 
+
+Following \cite{shamir2017optimal} gradient can be estimated with
+\begin{equation}\label{g}
+g(x, \xi, \mathbf{e}) = \frac{d}{2\tau}(\phi(x + \tau \mathbf{e}, \xi) - \phi(x - \tau \mathbf{e}, \xi)) \mathbf{e}
+\end{equation}
+for $\tau > 0$.
+
+Define the function
+\begin{equation}\label{hat_f}
+    \hat{f}_\tau (x) = \EE_{\mathbf{e}} [f(x + \tau\mathbf{e})]
+\end{equation}
+
+
+The next lemmas give estimations for quality of approximation
+
+\begin{lemma}\label{1L}
+Let $f(x)$ be $M_2$ Lipschitz continuous function. Then function $\hat{f}_\tau(x)$ is convex, Lipschitz with constant $M_2 $ satisfies
+$$\sup \limits_{x \in \mathcal{S}} |\hat{f}_\tau(x) - f(x)| \leq \tau M_2$$
+\end{lemma}
+\begin{proof}
+Using Lipschitz property
+$$|\hat{f}_\tau(x) - f(x)| \leq |\EE_\mathbf{e} (f(x + \tau\mathbf{e}) - f(x))| \leq |\EE_\mathbf{e}|| (M_2\tau\mathbf{e})||_2| \leq M_2\tau$$
+\end{proof}
+Proof for next lemma can be found in \cite{shamir2017optimal}
+\begin{lemma}\label{2L}
+Function $\hat{f}_\tau(x)$ is differentiable with the following gradient
+$$\nabla \hat{f}_\tau (x) = \EE_\mathbf{e}\left[\frac{d}{\tau} f(x + \tau \mathbf{e}) \mathbf{e}\right]$$
+\end{lemma}
+\begin{lemma}\label{3L}
+Let $f(x)$ be $M_2$ Lipschitz continuous function w.r.t $||\cdot||_2$. If $\mathbf{e}$ uniformly distributed on Euclidean sphere and $\kappa \in (0,1]$, then 
+$$\EE_\mathbf{e} \left[ \left(f(\mathbf{e}) - \EE_\mathbf{e} [f(\mathbf{e})] \right)^{2(1 + \kappa)}\right] \leq \left( \frac{cM_2^2}{d}\right)^{1 + \kappa}, \quad c = \frac{1}{\sqrt{2}}$$
+\end{lemma}
+\begin{proof}
+A standard result of measure concentration on Euclidean unit sphere implies that $\forall t > 0$
+$$Pr\left(|f(\mathbf{e}) -\EE[f(\mathbf{e})] | > t\right) \leq 2\exp(-c' d t^2/M_2^2), \quad c' = 2 $$
+(see the proof of Proposition 2.10 and Corollary 2.6 in \cite{ledoux2005concentration}). 
+
+Therefore,
+$$\EE_\mathbf{e} \left[ \left(f(\mathbf{e}) - \EE_\mathbf{e} [f(\mathbf{e})] \right)^{2(1 + \kappa)}\right]  = \int\limits_{t=0}^\infty Pr\left(|f(\mathbf{e}) -\EE[f(\mathbf{e})] |^{2(1 + \kappa)} > t\right) dt = \int\limits_{t=0}^\infty Pr\left(|f(\mathbf{e}) -\EE[f(\mathbf{e})] |} > t^{-2(1 + \kappa)}\right) dt $$
+$$\leq \int \limits_{t=0}^\infty 2 \exp\left(-c' d t^{-(1+\kappa)}/M_2^2\right) dt  \leq \left(\frac{cM_2^2}{d}\right)^{1+\kappa} $$
+
+\end{proof}
+
+\begin{lemma}\label{grad norm 1 +k}
+Under Assumptions \ref{1A} and \ref{2A} and $q \in [1, +\infty)$
+$$\EE_{\xi, \mathbf{e}}[||g(x,\xi,\mathbf{e})||_q^{1+\kappa}]\leq 32\left(\frac{\sqrt{cd}}{2\tau} a_{q,\kappa}M_2\right)^{1+\kappa} + 4\left(\frac{da_{q,\kappa}\Delta}{\tau}\right)^{1+\kappa} = \sigma_{q,\kappa}^{1+\kappa}$$
+\end{lemma}
+
+
+\begin{lemma}\label{inner product grad r}
+For $g(x, \xi, \mathbf{e})$ defined in \ref{g} and $\haf{f}_\tau(x)$ defined in \ref{hat_f},the following holds under Assumption \ref{2A}
+
+$$\EE_{\xi, \mathbf{e}} [\langle g(x,\xi, \mathbf{e}), r \rangle] \geq \langle \nabla \hat{f}_\tau(x) , r \rangle - \frac{d \Delta}{\tau}\EE_\mathbf{e} [|\langle \mathbf{e}, r \rangle|] $$
+for any $r \in \RR^d$
+\end{lemma}
+
+\begin{lemma}\label{inner product estimate}
+
+For random  vector $\mathbf{e}$ uniformly distributed on Euclidean sphere $\{\mathbf{e} \in \RR^d: ||\mathbf{e}||_2 = 1\}$ and for any $r \in \RR^d$:
+$$\EE_\mathbf{e}[|\langle \mathbf{e}, r \rangle|] \leq \frac{||r||_2}{\sqrt{d}}$$
+\end{lemma}
+Following lemma gives upper bounds for $\EE\left[||\mathbf{e}||_q^{2(1+\kappa)}\right]$
+\begin{lemma}\label{upper bounds}
+Let $q \geq 2$. By definition $\EE_\mathbf{e} \left[||\mathbf{e}||_q^{2(1+\kappa)}\right]  \leq a_{q, \kappa}^{2(1+\kappa)}$. Then
+$$a_{q, \kappa} = d^{\frac1q - \frac12}  \min \{ \sqrt{32\ln d - 8} , \sqrt{2q - 1}\} $$
+\end{lemma}
+
+\section{Stochastic Mirror Descent}
+We use definitions are some proofed properties from article \cite{vural2022mirror}
+
+Comparing with standard gradient descent, in mirror descent the updates of variables  are performed in dual space determined by a transformation called map function.  
+
+For function $\Psi: \RR^d \rightarrow \RR$ that is strictly convex w.r.t $l_p$ norm, continuously differentiable, we denote its Fenchel conjugate and Bregman divergence 
+$$\Psi^*(y)= \sup\limits_{x \in \RR^d} \{\langle x,y \rangle - \Psi(x) \} \quad \text{and} \quad  D_{\Psi}(x,y) = \Psi(x) - \Psi(y) - \langle \nabla \Psi(y), y -x \rangle$$
+The stochastic mirror descent updates
+\begin{equation}\label{MD}
+y_{k+1} = \nabla(\Psi^*) (\nabla \Psi(x_k) - \nu g_{k+1}) \quad x_{k+1} = \arg \min\limits_{x \in \mathcal{S}} D_{\Psi}(x, y_{k+1})
+\end{equation}
+
+With conditions for $\Psi$ it can be proofed that updates are well defined and $(\nabla \Psi)^{-1} = \nabla \Psi^*$. Map $\nabla \Psi$ is transformation map.
+
+
+
+
+\textbf{Uniform convex.} Consider a differentiable convex function $\psi : \RR^d \rightarrow \RR$, an exponent $r \geq 2$, and a constant $K > 0$. Then, $\psi$ is $(K,r)$-uniformly convex w.r.t. $p$-norm if for any $x,y \in \RR^d$
+$$\psi(y) - \psi(x)- \langle \psi(x), y -x \rangle \geq \frac{K}{r}||x-y||^r_p$$
+
+\textbf{Uniform smoothness.} Consider a $(K_0,r_0)$ uniform convex and differentiable function $\psi : \RR^d \rightarrow \RR$, an exponent $r \in (1, 2]$, and a constant $K > 0$. Then, $\psi$ is $(K,r)$-uniformly convex w.r.t. $p$-norm if for any $x,y \in \RR^d$
+$$\psi(y) - \psi(x)- \langle \psi(x), y -x \rangle \leq \frac{K}{r}||x-y||^r_p$$
+
+
+\begin{lemma}\label{func}
+For $\kappa\in (0,1], p \in [1 + \kappa, \infty)$ and $p^* : \frac{1}{p} + \frac{1}{p^*} = 1$. We define 
+$$K_p  = 10\max\left\{ 1, (p-1)^{\frac{1+\kappa}{2}}\right\}, \phi(x) = \frac{1}{1+\kappa} ||x||_p^{1+\kappa}$$
+The the following statements are true
+\begin{enumerate}
+    \item $\phi^*(y) = \frac{\kappa}{1 + \kappa} ||y||_{p^*}^{\frac{1+\kappa}{\kappa}}$
+    \item $\phi$ is $(K_p, 1 +\kappa)$-uniformly smooth w.r.t. $p$-norm
+    \item $\phi^*$ is $\left( K_p^{-\frac1\kappa}, \frac{1+\kappa}{\kappa} \right)$-uniformly convex w.r.t. $p^*$-norm
+\end{enumerate}
+\end{lemma}
+The next theorem gives convergence result of MGD with uniformly convex $\Psi$
+\begin{theorem}\label{MD convergence}
+
+Consider some $\kappa \in (0,1] , q \in [1, \infty]$, $q^*$ defined from $\frac{1}{q} + \frac{1}{q^*} = 1$ and function $\Psi$ which is $\left( 1, \frac{1+\kappa}{\kappa}\right)$-uniformly convex w.r.t. $q^*$ norm. Then the \ref{MD} algorithm  with corresponding map function $\nabla \Psi$ after $T$ iterations with any $g_k \in \RR^d, k \in \overline{1, T}$ and starting point $x_0 =\arg\min\limits_{x \in \mathcal{S}} \Psi(x)$
+$$\frac1T \sum \limits_{k=0}^{T-1} \langle g_{k+1}, x_k  -x^* \rangle \leq \frac{\kappa}{\kappa +1} \frac{R_0^{\frac{1+\kappa}{\kappa}} }{\nu T} + \frac{\nu^{\kappa}}{1+\kappa} \frac{1}{T} \sum \limits_{k=0}^{T-1} ||g_{k+1}||^{1+\kappa}_q$$
+where $R_0^{\frac{1+\kappa}{\kappa}}=  \frac{1+\kappa}{\kappa} \sup\limits_{x \in \mathcal{S}} \{\Psi(x) - \Psi(x_0) \}$
+\end{theorem}
+
+Proof can be found in \cite{vural2022mirror} in the proof of the Theorem $6$ .
+\section{Zeroth order algorithm}
+First of all, we select $q \in [1, \infty], \frac{1}{p} + \frac{1}{q} = 1$ and norm $||\cdot||_q$.
+
+After that we can obtain limiting  constants $a_{q, \kappa}, A$
+$$\EE_\mathbf{e} \left[||e||_q^{2(1+\kappa)}\right]  \leq a_{q, \kappa}^{2(1+\kappa)}$$
+$$A = \left(32\left(\frac{\sqrt{cd}}{2} a_{q,\kappa}M_2\right)^{1+\kappa} + 4\left(da_{q,\kappa}\Delta\right)^{1+\kappa}\right)^{\frac{1}{1+\kappa}}, \quad c =\frac{1}{\sqrt{2}}$$
+
+We will use function $\Psi_p(x) = K_p^{1/\kappa} \phi^*(x)$, where $K_p, \phi^*$ defined in \ref{func}, as necessary for \ref{MD convergence} Theorem $\left( 1, \frac{1+\kappa}{\kappa}\right)$-uniformly convex function. 
+
+Here $\mathcal{D} = \max \limits_{u,v \in \mathcal{S}} \sqrt{2D_\Psi_p(u,v)}, R_0^{\frac{1+\kappa}{\kappa}}=  \frac{1+\kappa}{\kappa} \sup\limits_{x \in \mathcal{S}} \{\Psi_p(x) - \Psi_p(x_0) \}$
+
+Then we choose number of iterations $T$ and  step sizes $\nu$ and $\tau > 0$ 
+
+
+$$\sigma_{q, \kappa} = \frac{A}{\tau}$$
+$$\nu = \frac{R_0^{1/\kappa}}{\sigma_{q,\kappa} }T^{-\frac{1}{1+\kappa}}$$
+
+Then final algorithm has following structure 
+\begin{algorithm}
+\caption{IZ SMD algorithm }\label{alg:cap}
+\begin{algorithmic}[1]
+\Procedure{IZ SMD}{Number of iterations $T$}
+    \State $x_0 \gets \arg\min\limits_{x \in \mathcal{S}} \Psi_p(x)$
+    
+    \For{$k = 0, 1, \dots ,T-1$}  
+    
+        \State Sample $\mathbf{e}^k$ from uniform distribution on Euclidean sphere
+        
+        \State Sample $\xi_k$
+        
+        \State Calculate $g_{k+1} = g(x_k, \xi_k, \mathbf{e}_k)$ via \ref{g}
+        
+        \State Calculate $y_{k+1}  \gets \nabla(\Psi_p^*) (\nabla \Psi_p(x_k) - \nu g_{k+1})$
+        
+        \State Calculate $x_{k+1}  \gets \arg \min\limits_{x \in \mathcal{S}} D_{\Psi_p}(x, y_{k+1})$
+
+    \EndFor
+
+    \State \textbf{return} $\overline{x}_T \gets \frac{1}{T}\sum\limits_{k=0}^{T-1}x_k$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\begin{theorem}\label{Zero Conv}
+Let $\overline{x}_T$ point obtained from Algorithm \ref{alg:cap} with $T$ iterations and $x^* \in \arg\min\limits_{x\in \mathcal{S}} f(x)$, then 
+$$f(\overline{x}_T) - f(x^*) \leq 2M_2\tau + \frac{\sqrt{d}\Delta}{\tau}\mathcal{D} + R_0\sigma_{q,\kappa} T^{-\frac{\kappa}{1+\kappa}},$$
+where $\sigma_{q,\kappa}^{1+\kappa} = 32\left(\frac{\sqrt{cd}}{2\tau} a_{q,\kappa}M_2\right)^{1+\kappa} + 4\left(\frac{da_{q,\kappa}\Delta}{\tau}\right)^{1+\kappa} $
+
+If $\tau = \sqrt{\frac{\mathcal{D} \Delta \sqrt{d} + AR_0 T^{-\frac{\kappa}{1+\kappa}}}{2M_2}}$, then bound is optimal
+$$\textcolor{orange}{f(\overline{x}_T) - f(x^*) \leq \sqrt{8M_2 \mathcal{D} \Delta \sqrt{d}} + \sqrt{8M_2AR_0} \frac{1}{T^{\frac{\kappa}{2(1+\kappa)}}}}$$ 
+\end{theorem}
+
+
+\bibliographystyle{plain}
+\bibliography{Ref}
+
+\pagebreak
+\section{Proof of lemmas}
+\begin{proof}[Proof of Lemma \ref{grad norm 1 +k}]
+We use fact that for all $x,y \in \RR$ and $\kappa \in (0,1]$: \begin{equation}\label{inq}
+    |x-y|^{1+\kappa} \leq 4|x|^{1+\kappa} + 4|y|^{1+ \kappa}
+\end{equation}
+
+Next, 
+
+$$\EE_{\xi, \mathbf{e}}[||g(x,\xi,\mathbf{e})||_q^{1+\kappa}] = \EE_{\xi, \mathbf{e}}\left[||\frac{d}{2\tau}(\phi(x + \tau \mathbf{e}, \xi) - \phi(x - \tau \mathbf{e}, \xi)) \mathbf{e}||_q^{1+\kappa}\right] \leq $$
+$$\left(\frac{d}{2\tau} \right)^{1+\kappa}\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|(f(x + \tau \mathbf{e}, \xi) - f(x - \tau \mathbf{e}, \xi) + \delta(x + \tau \mathbf{e}) - \delta(x - \tau \mathbf{e})) |^{1+\kappa}\right]\leq$$
+$$4\left(\frac{d}{2\tau} \right)^{1+\kappa}\left(\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|f(x + \tau \mathbf{e}, \xi) - f(x - \tau \mathbf{e}, \xi)|^{1+\kappa}\right] + \EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|\delta(x + \tau \mathbf{e}) - \delta(x - \tau \mathbf{e})) |^{1+\kappa}\right]\right)$$
+Lets deal with first term. For all $\alpha(\xi)$ 
+
+$$\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|f(x + \tau \mathbf{e}, \xi) - f(x - \tau \mathbf{e}, \xi)|^{1+\kappa}\right] \leq$$
+$$\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|(f(x + \tau \mathbf{e}, \xi) - \alpha) - (f(x - \tau \mathbf{e}, \xi) - \alpha)|^{1+\kappa}\right] \leq$$
+
+Using \ref{inq}
+
+$$4\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|f(x + \tau \mathbf{e}, \xi) - \alpha|^{ 1+\kappa} \right] + 4\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|f(x - \tau \mathbf{e}, \xi) - \alpha|^{ 1+\kappa} \right] \leq $$
+
+Distribution of $\mathbf{e}$ is symmetric
+
+$$8\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|f(x + \tau \mathbf{e}, \xi) - \alpha|^{ 1+\kappa} \right]  \leq $$
+
+Let $\alpha(\xi)  = \EE_\mathbf{e}[f(x + \tau\mathbf{e}, \xi)]$, then because of Cauchy-Schwartz inequality and conditional expectation properties
+
+$$8\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|f(x + \tau \mathbf{e}, \xi) - \alpha|^{ 1+\kappa} \right] 
+ =  8\EE_{\xi}\left[ \EE_\mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|f(x + \tau \mathbf{e}, \xi) - \alpha|^{ 1+\kappa} \right]\right]\leq$$
+$$8\EE_{\xi}\left[\sqrt{\EE_{\mathbf{e}}\left[||\mathbf{e}||_q^{2(1+\kappa)} \right] \EE_\mathbf{e}\left[|f(x + \tau \mathbf{e}, \xi) - \EE_\mathbf{e}[f(x + \tau\mathbf{e}, \xi)]|^{ 2(1+\kappa)} \right]} \right]\leq$
+
+Next we use $\EE_\mathbf{e} \left[||e||_q^{2(1+\kappa)} \right] \leq a_{q, \kappa}^{2(1+\kappa)}$ and Lemma \ref{3L} for $f(x + \tau\mathbf{e}, \xi)$ with fixed $\xi$
+
+$$8 a_{q, \kappa}^{1+\kappa} \EE_{\xi}\left[\sqrt{ \left(\frac{cM_2^2(\xi)}{d}\right)^{1 + \kappa}}\right] = 8 a_{q, \kappa}^{1+\kappa} \left(\frac{c}{d}\right)^{(1+\kappa)/2}\EE_{\xi}\left[ M_2^{1+\kappa}(\xi)}\right] \leq 8\left(\sqrt{\frac{c}{d}} a_{q,\kappa}M_2\right)^{1+\kappa}$$
+
+
+
+Lets deal with the second term. We use Cauchy-Schwartz inequality, Assumption \ref{2A}  and $\EE_\mathbf{e} \left[||e||_q^{2(1+\kappa)}\right]  \leq a_{q, \kappa}^{2(1+\kappa)}$
+
+$$\EE_{\xi, \mathbf{e}}\left[||\mathbf{e}||_q^{1+\kappa}|\delta(x + \tau \mathbf{e}) - \delta(x - \tau \mathbf{e})) |^{1+\kappa}\right] \leq $$
+$$\leq \sqrt{\EE_\mathbf{e} \left[||e||_q^{2(1+\kappa)}\right]  \EE_\mathbf{e} \left[|\delta(x + \tau \mathbf{e}) - \delta(x - \tau \mathbf{e})) |^{2(1+\kappa)}}\right]}  $$
+$$\leq a_{q,\kappa}^{1+\kappa} 2^{1+\kappa}\Delta^{1+\kappa} = (2a_{q,\kappa}\Delta)^{1+\kappa}$$
+
+Adding two terms we get final result
+
+$$4\left(\frac{d}{2\tau} \right)^{1+\kappa} \left(8\left(\sqrt{\frac{c}{d}} a_{q,\kappa}M_2\right)^{1+\kappa} + (2a_{q,\kappa}\Delta)^{1+\kappa} \right) = 32\left(\frac{\sqrt{cd}}{2\tau} a_{q,\kappa}M_2\right)^{1+\kappa} + 4\left(\frac{da_{q,\kappa}\Delta}{\tau}\right)^{1+\kappa}  $$
+\end{proof}
+
+\begin{proof}[Proof of lemma \ref{inner product grad r}]
+With
+
+$$g(x, \xi, \mathbf{e}) = \frac{d}{2\tau}(f(x + \tau \mathbf{e}, \xi) + \delta(x + \tau \mathbf{e}) - f(x - \tau \mathbf{e}, \xi) - \delta(x - \tau \mathbf{e})) \mathbf{e}$$
+Then
+$$\EE_{\xi, \mathbf{e}} [\langle g(x,\xi, \mathbf{e}), r \rangle] = \frac{d}{2\tau}\EE_{\xi, \mathbf{e}} [\langle (f(x + \tau \mathbf{e}, \xi) - f(x - \tau \mathbf{e}, \xi))\mathbf{e}, r \rangle]  + \frac{d}{2\tau}\EE_{\xi, \mathbf{e}} [\langle (\delta(x + \tau \mathbf{e})  - \delta(x - \tau \mathbf{e}))\mathbf{e}, r \rangle] $$
+In the first term we use  fact that $\mathbf{e}$ symmetrically distributed
+$$ \frac{d}{2\tau}\EE_{\xi, \mathbf{e}} [\langle (f(x + \tau \mathbf{e}, \xi) - f(x - \tau \mathbf{e}, \xi))\mathbf{e}, r \rangle] = $$
+$$ \frac{d}{\tau}\EE_{\xi, \mathbf{e}} [\langle f(x + \tau \mathbf{e}, \xi) \mathbf{e}, r \rangle] = $$
+$$ \frac{d}{\tau}\EE_{ \mathbf{e}} [\langle \EE_{\xi}[f(x + \tau \mathbf{e}, \xi)] \mathbf{e}, r \rangle] = \frac{d}{\tau} \langle \EE_{ \mathbf{e}} [f(x + \tau \mathbf{e}) \mathbf{e}], r \rangle =$$
+Using Lemma \ref{2L}
+$$= \langle \nabla \hat{f}_\tau(x), r \rangle$$
+In the second term we use Assumption \ref{2A}
+$$\frac{d}{2\tau}\EE_{\xi, \mathbf{e}} [\langle (\delta(x + \tau \mathbf{e})  - \delta(x - \tau \mathbf{e}))\mathbf{e}, r \rangle] \geq - \frac{d\Delta}{\tau} \EE_\mathbf{e}[|\langle \mathbf{e}, r \rangle|]$$
+Adding two terms together we get necessary result.
+\end{proof}
+\begin{proof}[Proof of lemma \ref{upper bounds}]
+We use Lemma $1$ auxiliary lemma from Theorem $1$ from \cite{gorbunov2019upper}
+\begin{enumerate}
+    \item Let $e_k$ be $k$-th component of $\mathbf{e}$
+\begin{equation}\label{aux}
+\EE\left[ |e_2|^q\right] \leq \left( \frac{q-1}{d}\right)^{\frac{q}{2}}, \quad q \geq 2\end{equation}
+\item For any $ x \in \RR^d$  and $q_1 \geq q_2$
+\begin{equation}\label{aux2}
+||x||_{q_1} \leq ||x||_{q_2}
+\end{equation}
+\end{enumerate}
+Then
+$$\EE\left[ ||\mathbf{e}||_q^{2(1+\kappa)} \right] = \EE \left[ \left( \left( \sum\limits_{k=1}^d |e_k|^q \right)^2\right)^\frac{1+\kappa}{q}\right] $$
+Due to Jensen's inequality and equally distributed $e_k$
+
+$$ \EE \left[ \left( \left( \sum\limits_{k=1}^d |e_k|^q \right)^2\right)^\frac{1+\kappa}{q}\right]\leq \left( \EE\left[ \left( \sum\limits_{k=1}^d |e_k|^q \right)^2\right]\right)^\frac{1+\kappa}{q}$$
+We use fact that $\forall x_i \geq 0,  i = \overline{1,d} $ 
+$$d \sum\limits_{k=1}^d x_i^2 \geq \left( \sum \limits_{k=1}^d x_i\right)^2$$
+Therefore
+$$\leq \left( d\EE\left[ \sum\limits_{k=1}^d |e_k|^{2q} \right]\right)^\frac{1+\kappa}{q} = (d^2 \EE[|e_2|^{2q}])^\frac{1+\kappa}{q}$$
+Using  \ref{aux} with $2q$
+$$\leq d^{\frac{2(1+\kappa)}{q}} \left( \frac{2q-1}{d}\right)^{1+\kappa} = \left(d^{\frac2q - 1} (2q - 1) \right)^{1+\kappa}$$ 
+By definition  of $a_{q, \kappa}$
+$$a_{q,\kappa} = \sqrt{d^{\frac2q - 1} (2q - 1) \right)}$$
+With fixed $d$ and large $q$ more precise upper bound can be obtained
+
+We define function $h_d(q)$ and find its minimum with fixed $d$ 
+$$h_d(q)  = \ln\left(\sqrt{d^{\frac2q - 1} (2q - 1) \right)}\right) = \left(\frac{1}{q} -\frac12\right)\ln(d) + \frac12 \ln(2q-1)$$
+$$\frac{d h_d(q)}{dq} = \frac{-\ln(d)}{q^2} + \frac{1}{2q - 1} = 0$$
+$$q^2 -2\ln(d)q + \ln(d) = 0$$
+When $d \geq 3$ minimal point $q_0$ lies in $[2, +\infty)$
+$$q_0 = (\ln d) \left( 1 + \sqrt{1 - \frac{1}{\ln d}}\right), \qquad \ln d \leq q_0 \leq 2\ln d$$
+When $q \geq q_0$ from \ref{aux2}
+$$a_{q,\kappa}  < a_{q_0,\kappa}  = \sqrt{d^{\frac2q_0 - 1} (2q_0 - 1) \right)} \leq d^{\frac{1}{\ln d} - \frac12} \sqrt{4\ln d - 1}  = \frac{e}{\sqrt{d}}\sqrt{4\ln d - 1} \leq d^{\frac1q - \frac12}\sqrt{32\ln d - 8} $$
+Consequently, 
+$$a_{q, \kappa} = d^{\frac1q - \frac12}  \min \{ \sqrt{32\ln d - 8} , \sqrt{2q - 1}\} $$
+
+\end{proof}
+\section{Proof of Main Theorem}
+\begin{proof}[Proof of Main Theorem]
+By definition $x_* \in \arg\min\limits_{x \in \mathcal{S}} f(x)$
+
+For $T$ iterations we use \ref{MD convergence} Theorem of Convergence for $g_k(x_k, \xi_k, \mathbf{e}_k)$
+$$\frac1T \sum \limits_{k=0}^{T-1} \langle g_{k+1}, x_k  -x^* \rangle \leq \frac{\kappa}{\kappa +1} \frac{R_0^{\frac{1+\kappa}{\kappa}} }{\nu T} + \frac{\nu^{\kappa}}{1+\kappa} \frac{1}{T} \sum \limits_{k=0}^{T-1} ||g_{k+1}||^{1+\kappa}_q$$
+Take  expectation $\EE_{\xi, \mathbf{e}}$ from both sides
+$$\frac1T \sum \limits_{k=0}^{T-1} \EE_{\xi, \mathbf{e}}\left[  \langle g_{k+1}, x_k  -x^* \rangle\right] \leq \frac{\kappa}{\kappa +1} \frac{R_0^{\frac{1+\kappa}{\kappa}} }{\nu T} + \frac{\nu^{\kappa}}{1+\kappa}\frac{1}{T} \sum \limits_{k=0}^{T-1}\EE_{\xi, \mathbf{e}}\left[||g_{k+1}||^{1+\kappa}_q \right]$$
+
+Use Lemma \ref{grad norm 1 +k} for the right part of inequality
+$$\frac{\nu^{\kappa}}{1+\kappa}\frac{1}{T} \sum \limits_{k=0}^{T-1}\EE_{\xi, \mathbf{e}}\left[||g_{k+1}||^{1+\kappa}_q \right] \leq \frac{\nu^{\kappa}}{1+\kappa}\frac{1}{T} \sum \limits_{k=0}^{T-1} \sigma_{q,\kappa}^{1+\kappa} \leq \frac{\nu^{\kappa}}{1+\kappa}\sigma_{q,\kappa}^{1+\kappa} $$
+Use Lemma \ref{inner product grad r} for the left part of inequality
+
+$$\frac1T \sum \limits_{k=0}^{T-1} \EE_{\xi, \mathbf{e}}\left[  \langle g_{k+1}, x_k  -x^* \rangle\right] \geq$$
+\begin{equation}\label{200}
+\geq \frac1T \sum \limits_{k=0}^{T-1}\langle \nabla \hat{f}_\tau(x_{k}) , x_k  -x^* \rangle - \frac1T \sum \limits_{k=0}^{T-1}\frac{d \Delta}{\tau}\EE_\mathbf{e} [|\langle \mathbf{e}, x_k  -x^* \rangle|]
+\end{equation}
+\begin{enumerate}
+    \item 
+
+For the first term of \ref{200} we use Lemma \ref{1L} and convexity of $\hat{f}_\tau(x)$
+$$\frac1T \sum \limits_{k=0}^{T-1}\langle \nabla \hat{f}_\tau(x_{k}) , x_k  -x^* \rangle \geq \frac1T \sum \limits_{k=0}^{T-1} \left( \hat{f}_\tau(x_k) - \hat{f}_\tau(x_*)\right)$$
+Define $\overline{x}_T  = \frac1T \sum \limits_{k=0}^{T-1} x_k$ and use Jensen's inequality
+$$\frac1T \sum \limits_{k=0}^{T-1} \left( \hat{f}_\tau(x_k) - \hat{f}_\tau(x_*)\right) \geq \hat{f}_\tau(\overline{x}_T) - \hat{f}_\tau(x^*)$$
+
+Use approximation property from Lemma \ref{1L}
+$$\hat{f}_\tau(\overline{x}_T) - \hat{f}_\tau(x^*) \geq f(\overline{x}_T) - f(x^*) - 2M_2\tau$$
+\item For the second term of \ref{200} we use Lemma \ref{inner product estimate}, define $\mathcal{D} = \max \limits_{u,v \in \mathcal{S}} \sqrt{2D_\Psi(u,v)}$  and estimate $||x_k - u||_2 \leq \mathcal{D}, \forall u \in\mathcal{S}$
+$$ - \frac{d \Delta}{T\tau} \sum \limits_{k=0}^{T-1}\EE_\mathbf{e} [|\langle \mathbf{e}, x_k  -x^* \rangle|] \geq -\frac{d\Delta}{T\tau}\sum \limits_{k=0}^{T-1} \frac{1}{\sqrt{d}} ||x_k - x^*||_2 \geq -\frac{\sqrt{d}\Delta}{\tau}\mathcal{D} $$
+\end{enumerate}
+
+Combining all parts together
+
+$$f(\overline{x}_T) - f(x^*) \leq 2M_2\tau + \frac{\sqrt{d}\Delta}{\tau}\mathcal{D} + \frac{R_0^{\frac{1+\kappa}{\kappa}} }{\nu T} + \frac{\nu^{\kappa}}{1+\kappa}\sigma_{q,\kappa}^{1+\kappa}$$
+
+By choosing $\nu = \frac{R_0^{1/\kappa}}{\sigma_{q,\kappa} }T^{-\frac{1}{1+\kappa}}$ we get
+$$f(\overline{x}_T) - f(x^*) \leq 2M_2\tau + \frac{\sqrt{d}\Delta}{\tau}\mathcal{D} + R_0\sigma_{q,\kappa} T^{-\frac{\kappa}{1+\kappa}}$$
+$$\sigma_{q,\kappa} = \frac{1}{\tau} \left(32\left(\frac{\sqrt{cd}}{2} a_{q,\kappa}M_2\right)^{1+\kappa} + 4\left(da_{q,\kappa}\Delta\right)^{1+\kappa}\right)^{\frac{1}{1+\kappa}}  = \frac{A}{\tau}$$
+Therefore
+$$f(\overline{x}_T) - f(x^*) \leq 2M_2\tau + \frac{1}{\tau}\left(\mathcal{D} \Delta \sqrt{d} + AR_0 T^{-\frac{\kappa}{1+\kappa}}\right)$$
+Choosing $\tau = \sqrt{\frac{\mathcal{D} \Delta \sqrt{d} + AR_0 T^{-\frac{\kappa}{1+\kappa}}}{2M_2}}$ we achieve minimum of right part  depending on $\tau > 0$
+$$f(\overline{x}_T) - f(x^*) \leq 2\sqrt{2M_2 \left(\mathcal{D} \Delta \sqrt{d} + AR_0 T^{-\frac{\kappa}{1+\kappa}} \right)}$$
+Using fact $\forall x,y \geq 0, \gamma \in [0,1]: (x+y)^\gamma \leq x^\gamma + y^\gamma$
+$$f(\overline{x}_T) - f(x^*) \leq \sqrt{8M_2 \mathcal{D} \Delta \sqrt{d}} + \sqrt{8M_2AR_0} \frac{1}{T^{\frac{\kappa}{2(1+\kappa)}}}$$ 
+
+\end{proof}
+\end{document}
